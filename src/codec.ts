@@ -32,6 +32,9 @@ export function decodeBill(blob: string): Bill | null {
       cents: Math.max(0, Math.round(Number(f.cents) || 0)),
     }));
     bill.host = bill.host ?? { name: "the host" };
+    bill.roster = Array.isArray(bill.roster)
+      ? bill.roster.map((n) => String(n).slice(0, 30)).filter(Boolean).slice(0, 24)
+      : undefined;
     return bill;
   } catch {
     return null;

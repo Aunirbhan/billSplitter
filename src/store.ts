@@ -18,6 +18,11 @@ interface TallyState {
   toggleClaim: (id: string, itemId: string) => void;
   toggleCash: (id: string, itemId: string) => void;
   setSplit: (id: string, itemId: string, split: number) => void;
+  toggleAssign: (id: string, itemId: string, name: string) => void;
+
+  /** follow-up question from the parser when a bill is incomplete */
+  draftNote: string | null;
+  setDraftNote: (note: string | null) => void;
   removeBill: (id: string) => void;
 }
 
@@ -84,6 +89,22 @@ export const useStore = create<TallyState>()(
           },
         });
       },
+      toggleAssign: (id, itemId, name) => {
+        const b = get().bills[id];
+        if (!b || !name || name === b.myName) return;
+        const cur = b.assign?.[itemId] ?? [];
+        const next = cur.includes(name) ? cur.filter((n) => n !== name) : [...cur, name];
+        set({
+          bills: {
+            ...get().bills,
+            [id]: { ...b, assign: { ...(b.assign ?? {}), [itemId]: next } },
+          },
+        });
+      },
+
+      draftNote: null,
+      setDraftNote: (note) => set({ draftNote: note }),
+
       setSplit: (id, itemId, split) => {
         const b = get().bills[id];
         if (!b) return;
@@ -100,7 +121,7 @@ export const useStore = create<TallyState>()(
         set({ bills });
       },
     }),
-    { name: "tally-v1" },
+    { name: "billsplitter-v1" },
   ),
 );
 

@@ -13,8 +13,8 @@ export function Landing() {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-5">
       <div className="safe-top flex items-center justify-between pt-6">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Tally 🧾</h1>
-          <p className="text-dim">Snap the bill. Text the link. Everyone taps what they ate.</p>
+          <h1 className="font-display text-4xl font-bold tracking-tight">billSplitter</h1>
+          <p className="mt-1 text-dim">Snap the bill. Text the link. Everyone taps what they ate.</p>
         </div>
         <button
           onClick={() => go("/settings")}
@@ -60,7 +60,7 @@ export function Landing() {
                 </button>
                 <button
                   onClick={() => confirm(`Delete "${sb.bill.title}" from this device?`) && removeBill(sb.id)}
-                  className="grid size-11 shrink-0 place-items-center rounded-2xl border border-line text-dim active:text-coral"
+                  className="grid size-11 shrink-0 place-items-center rounded-2xl border border-line text-dim active:text-danger"
                   aria-label="Delete bill"
                 >
                   ✕
@@ -72,7 +72,9 @@ export function Landing() {
       )}
 
       <div className="mt-auto pb-6 pt-10 text-center text-xs text-dim/60">
-        Bills live on your phone and inside the links you share. No accounts, no server, no tracking.
+        Bills live on your phone and inside the links you share.
+        <br />
+        No accounts, no server, no tracking. · by aunirbhan
       </div>
     </div>
   );

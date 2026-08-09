@@ -6,18 +6,24 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#0c0e12" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFDF9" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#322B26" />
+    <meta name="author" content="aunirbhan" />
+    <meta name="description" content="billSplitter — snap the bill, text the link, everyone taps what they ate." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Tally" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="billSplitter" />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧾</text></svg>"
     />
-    <title>Tally — split the bill</title>
+    <title>billSplitter</title>
     <style>
-      /* Paint something instantly while JS loads on restaurant wifi */
-      html { background: #0c0e12; }
+      /* Paint the right scheme instantly while JS loads */
+      html { background: #fffdf9; }
+      @media (prefers-color-scheme: dark) {
+        html { background: #322b26; }
+      }
     </style>
   </head>
   <body>

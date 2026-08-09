@@ -16,7 +16,7 @@ export function ShareSheet({ open, onClose, bill }: { open: boolean; onClose: ()
       margin: 1,
       width: 480,
       errorCorrectionLevel: "M",
-      color: { dark: "#0c0e12", light: "#eef1f6" },
+      color: { dark: "#4a3e37", light: "#fffdf9" },
     })
       .then(setQr)
       .catch(() => setQr(""));

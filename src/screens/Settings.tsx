@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore } from "../store";
 import { go } from "../router";
+import { hasProxy } from "../ai";
 import { Button, Field, TopBar } from "../components/ui";
 
 export function Settings() {
@@ -36,20 +37,29 @@ export function Settings() {
           <Field label="PayPal.me name" value={local.paypal} onChange={(v) => setLocal({ ...local, paypal: v })} placeholder="daspays" />
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-dim">Receipt scanning</h2>
-          <p className="-mt-2 text-sm text-dim">
-            Only needed to <em>host</em> with a photo or use voice/text fixes. The key lives in this phone's browser
-            storage and every call goes straight from your phone to Anthropic — there is no server in between.
-          </p>
-          <Field
-            label="Anthropic API key"
-            value={local.apiKey}
-            onChange={(v) => setLocal({ ...local, apiKey: v })}
-            type="password"
-            placeholder="sk-ant-…"
-          />
-        </section>
+        {hasProxy() ? (
+          <section className="space-y-2">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-dim">Receipt scanning</h2>
+            <p className="-mt-1 text-sm text-dim">
+              ✓ Scanning is built in for everyone on this site — no key, no setup, nothing to do here.
+            </p>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-dim">Receipt scanning (dev)</h2>
+            <p className="-mt-2 text-sm text-dim">
+              This build has no scan proxy configured, so scanning needs an Anthropic API key stored on this phone. See
+              the README's proxy section to make scanning free for everyone.
+            </p>
+            <Field
+              label="Anthropic API key"
+              value={local.apiKey}
+              onChange={(v) => setLocal({ ...local, apiKey: v })}
+              type="password"
+              placeholder="sk-ant-…"
+            />
+          </section>
+        )}
 
         <Button className="w-full py-4" onClick={save}>
           {saved ? "Saved ✓" : "Save"}

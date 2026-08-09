@@ -26,6 +26,10 @@ jobs:
       - run: npm ci
       - run: npx vitest run
       - run: npm run build
+        env:
+          # Repo variable → Settings → Secrets and variables → Actions → Variables.
+          # When set to your Cloudflare Worker URL, nobody needs an API key.
+          VITE_ANTHROPIC_PROXY: ${{ vars.ANTHROPIC_PROXY_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

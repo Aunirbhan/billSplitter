@@ -15,16 +15,16 @@ export function Button({
   className?: string;
 }) {
   const styles = {
-    primary: "bg-amber text-black font-semibold active:scale-[0.98]",
-    mint: "bg-mint text-black font-semibold active:scale-[0.98]",
+    primary: "bg-accent text-accent-ink font-semibold active:scale-[0.98]",
+    mint: "bg-money text-accent-ink font-semibold active:scale-[0.98]",
     ghost: "bg-card-hi text-ink border border-line active:scale-[0.98]",
-    danger: "bg-transparent text-coral border border-coral/40 active:scale-[0.98]",
+    danger: "bg-transparent text-danger border border-danger/40 active:scale-[0.98]",
   }[kind];
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-2xl px-5 py-3.5 text-base transition-transform disabled:opacity-40 ${styles} ${className}`}
+      className={`rounded-full px-6 py-3.5 text-base transition-transform disabled:opacity-40 ${styles} ${className}`}
     >
       {children}
     </button>
@@ -70,7 +70,7 @@ export function Sheet({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60" />
+      <div className="absolute inset-0 bg-black/40" />
       <div
         className="pop-in relative w-full max-w-md rounded-t-3xl bg-card border-t border-line p-5 safe-bottom max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -106,7 +106,7 @@ export function Field({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-line bg-card-hi px-4 py-3 text-ink placeholder:text-dim/60 focus:border-amber focus:outline-none"
+        className="w-full rounded-xl border border-line bg-card-hi px-4 py-3 text-ink placeholder:text-dim/60 focus:border-accent focus:outline-none"
       />
     </label>
   );
@@ -152,7 +152,7 @@ export function TopBar({ title, back, right }: { title: string; back?: () => voi
           </svg>
         </button>
       )}
-      <h1 className="flex-1 truncate text-lg font-bold">{title}</h1>
+      <h1 className="font-display flex-1 truncate text-xl font-bold">{title}</h1>
       {right}
     </div>
   );

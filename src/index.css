@@ -1,22 +1,64 @@
 @import "tailwindcss";
 
-@theme {
-  --color-bg: #0c0e12;
-  --color-card: #171a21;
-  --color-card-hi: #1e222b;
-  --color-line: #262b36;
-  --color-ink: #eef1f6;
-  --color-dim: #8b93a3;
-  --color-mint: #4ade80;
-  --color-amber: #fbbf24;
-  --color-coral: #fb7185;
+/*
+  billSplitter — matte cream & brown, easy on the eyes.
+  Follows the system preference automatically:
+    light → near-white cream (Alabaster Milk base)
+    dark  → muted smoky gray-brown (Smoky Espresso base)
+  Palette:
+    #FFFDF9 Alabaster Milk · #F5EBE0 Muted Oatmeal · #E3D5CA Dusty Sand
+    #D5BDAF Pale Taupe · #C6AC8F Faded Almond · #AF8F7A Muted Cinnamon
+    #8E7364 Driftwood · #6E5A4E Ash Cocoa · #4A3E37 Smoky Espresso
+*/
+:root {
+  color-scheme: light dark;
+  --bg: #fffdf9; /* Alabaster Milk */
+  --card: #f5ebe0; /* Muted Oatmeal */
+  --card-hi: #ede0d2; /* Oatmeal → Sand */
+  --line: #e3d5ca; /* Dusty Sand */
+  --ink: #4a3e37; /* Smoky Espresso */
+  --dim: #8e7364; /* Driftwood */
+  --accent: #af8f7a; /* Muted Cinnamon */
+  --accent-ink: #fffdf9; /* Alabaster on cinnamon */
+  --money: #6e5a4e; /* Ash Cocoa — calm, grounded totals */
+  --danger: #8e7364; /* Driftwood — quiet, never alarming */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #322b26; /* deepened Smoky Espresso — muted gray-brown */
+    --card: #4a3e37; /* Smoky Espresso */
+    --card-hi: #574a41; /* Espresso → Ash Cocoa */
+    --line: #6e5a4e; /* Ash Cocoa */
+    --ink: #f5ebe0; /* Muted Oatmeal */
+    --dim: #c6ac8f; /* Faded Almond */
+    --accent: #d5bdaf; /* Pale Taupe */
+    --accent-ink: #4a3e37; /* Espresso on taupe */
+    --money: #e3d5ca; /* Dusty Sand */
+    --danger: #c6ac8f; /* Faded Almond */
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card-hi: var(--card-hi);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-dim: var(--dim);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-money: var(--money);
+  --color-danger: var(--danger);
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  /* Hinge-style warm serif for display headings */
+  --font-display: "New York", ui-serif, Georgia, "Times New Roman", serif;
 }
 
 html,
 body {
-  background: var(--color-bg);
-  color: var(--color-ink);
+  background: var(--bg);
+  color: var(--ink);
   font-family: var(--font-sans);
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
@@ -36,7 +78,7 @@ textarea {
 }
 
 @keyframes flash-edit {
-  0% { background-color: rgba(251, 191, 36, 0.35); }
+  0% { background-color: rgba(175, 143, 122, 0.3); } /* Muted Cinnamon wash */
   100% { background-color: transparent; }
 }
 .flash-edit {

@@ -34,6 +34,8 @@ export interface Bill {
   totalCents: number;
   /** party size — divides tax/tip/fees evenly */
   people: number;
+  /** optional names of everyone at the table — gives each person a stable color on every phone */
+  roster?: string[];
   host: HostInfo;
   createdAt: number;
 }
@@ -49,6 +51,8 @@ export interface SavedBill {
   cash: string[];
   /** my local corrections to how many people shared an item */
   splits?: Record<string, number>;
+  /** local attribution of items to OTHER people at the table (never includes me) */
+  assign?: Record<string, string[]>;
   myName: string;
   savedAt: number;
 }

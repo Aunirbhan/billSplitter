@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useStore } from "../store";
 import { go } from "../router";
-import { parseReceipt, friendlyError } from "../ai";
+import { aiReady, friendlyError, hasProxy, parseReceipt } from "../ai";
 import { newId } from "../split";
 import { Button, TopBar, Field } from "../components/ui";
 import type { Bill } from "../types";
@@ -48,43 +48,69 @@ export function Capture() {
   const settings = useStore((s) => s.settings);
   const setSettings = useStore((s) => s.setSettings);
   const setDraft = useStore((s) => s.setDraft);
+  const setDraftNote = useStore((s) => s.setDraftNote);
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [keyInput, setKeyInput] = useState("");
-  const needsKey = !settings.apiKey;
+  const needsKey = !aiReady(settings.apiKey);
 
   const pick = (f: File) => {
     setFile(f);
-    setError(null);
+    setNotice(null);
     const r = new FileReader();
     r.onload = () => setPreview(r.result as string);
     r.readAsDataURL(f);
   };
 
+  const toReview = (bill: Omit<Bill, "host" | "people">, note: string | null) => {
+    setDraft({
+      ...bill,
+      people: 4,
+      host: {
+        name: settings.name || "Host",
+        venmo: settings.venmo || undefined,
+        cashapp: settings.cashapp || undefined,
+        zelle: settings.zelle || undefined,
+        paypal: settings.paypal || undefined,
+      },
+    });
+    setDraftNote(note);
+    go("/review");
+  };
+
   const parse = async () => {
-    if (!file || !settings.apiKey) return;
+    if (!file || needsKey) return;
     setBusy(true);
-    setError(null);
+    setNotice(null);
     try {
       const b64 = await toJpegBase64(file);
-      const { bill } = await parseReceipt(settings.apiKey, b64, "image/jpeg");
-      setDraft({
-        ...bill,
-        people: 4,
-        host: {
-          name: settings.name || "Host",
-          venmo: settings.venmo || undefined,
-          cashapp: settings.cashapp || undefined,
-          zelle: settings.zelle || undefined,
-          paypal: settings.paypal || undefined,
-        },
-      });
-      go("/review");
+      const scan = await parseReceipt(settings.apiKey, b64, "image/jpeg");
+      switch (scan.status) {
+        case "ok":
+          toReview(scan.bill, null);
+          break;
+        case "incomplete":
+        case "not_fully_in_view":
+          // Take what was readable into review; the parser's question rides
+          // along so voice/text can fill in the rest.
+          if (scan.bill.items.length > 0) {
+            toReview(scan.bill, scan.question ?? "Some info was missing — tell me what to fill in.");
+          } else {
+            setNotice(scan.question ?? "Couldn't read enough of that — retake with the whole receipt in frame.");
+          }
+          break;
+        case "not_readable":
+          setNotice(scan.question ?? "Too blurry to read — more light, receipt flat, try again.");
+          break;
+        case "not_a_bill":
+          setNotice(scan.question ?? "That doesn't look like a receipt — snap the itemized bill.");
+          break;
+      }
     } catch (e) {
-      setError(friendlyError(e));
+      setNotice(friendlyError(e));
     } finally {
       setBusy(false);
     }
@@ -92,6 +118,7 @@ export function Capture() {
 
   const manual = () => {
     setDraft(emptyBill(settings.name));
+    setDraftNote(null);
     go("/review");
   };
 
@@ -99,12 +126,12 @@ export function Capture() {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col">
       <TopBar title="Snap the bill" back={() => go("/")} />
       <div className="flex flex-1 flex-col gap-4 px-5 py-5">
-        {needsKey && (
-          <div className="rounded-2xl border border-amber/40 bg-amber/5 p-4">
-            <div className="mb-1 font-semibold">One-time setup for scanning</div>
+        {needsKey && !hasProxy() && (
+          <div className="rounded-3xl border border-accent/40 bg-accent/5 p-4">
+            <div className="mb-1 font-semibold">Dev setup needed</div>
             <p className="mb-3 text-sm text-dim">
-              Reading receipts uses Claude. Paste an Anthropic API key — it stays on <em>this phone only</em>{" "}
-              (guests never need one). Or skip and type the bill in.
+              No scan proxy is configured for this build, so scanning needs an Anthropic API key on this phone (see
+              README → proxy for the keyless setup). Or skip and type the bill in.
             </p>
             <Field label="Anthropic API key" value={keyInput} onChange={setKeyInput} type="password" placeholder="sk-ant-…" />
             <Button
@@ -127,33 +154,66 @@ export function Capture() {
         />
 
         {preview ? (
-          <div className="flex flex-1 flex-col gap-3">
-            <img src={preview} alt="Receipt preview" className="max-h-[50vh] w-full rounded-2xl object-contain bg-card" />
-            {error && <div className="rounded-xl border border-coral/40 bg-coral/10 p-3 text-sm text-coral">{error}</div>}
-            <div className="mt-auto flex gap-2">
+          <div className="pop-in flex flex-1 flex-col gap-3">
+            <div className="relative flex-1 overflow-hidden rounded-3xl bg-card">
+              <img src={preview} alt="Receipt preview" className="absolute inset-0 size-full object-contain" />
+              {busy && (
+                <div className="absolute inset-0 grid place-items-center bg-bg/60 backdrop-blur-sm">
+                  <div className="text-center">
+                    <div className="shimmer text-4xl">🧾</div>
+                    <div className="mt-2 font-medium">Reading the receipt…</div>
+                    <div className="text-sm text-dim">items, tax, tip, total</div>
+                  </div>
+                </div>
+              )}
+            </div>
+            {notice && (
+              <div className="pop-in rounded-2xl border border-danger/40 bg-danger/10 p-3.5 text-sm text-ink">
+                <span className="mr-1.5">🤔</span>
+                {notice}
+              </div>
+            )}
+            <div className="flex gap-2">
               <Button kind="ghost" className="flex-1" onClick={() => fileRef.current?.click()} disabled={busy}>
                 Retake
               </Button>
               <Button className="flex-[2]" onClick={parse} disabled={busy || needsKey}>
-                {busy ? "Reading receipt…" : "Read it →"}
+                {busy ? "Reading…" : "Read it →"}
               </Button>
             </div>
           </div>
         ) : (
           <button
             onClick={() => fileRef.current?.click()}
-            className="grid flex-1 place-items-center rounded-3xl border-2 border-dashed border-line bg-card/50 active:bg-card"
+            className="group relative flex flex-1 flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl border-2 border-dashed border-accent/50 bg-card/60 transition-colors active:bg-card"
           >
-            <div className="text-center">
-              <div className="text-5xl">📸</div>
-              <div className="mt-2 font-semibold">Tap to photograph the receipt</div>
-              <div className="mt-1 text-sm text-dim">flat on the table, all of it in frame</div>
+            {/* corner ticks — camera-viewfinder feel */}
+            <span className="absolute left-4 top-4 size-6 rounded-tl-lg border-l-[3px] border-t-[3px] border-accent/70" />
+            <span className="absolute right-4 top-4 size-6 rounded-tr-lg border-r-[3px] border-t-[3px] border-accent/70" />
+            <span className="absolute bottom-4 left-4 size-6 rounded-bl-lg border-b-[3px] border-l-[3px] border-accent/70" />
+            <span className="absolute bottom-4 right-4 size-6 rounded-br-lg border-b-[3px] border-r-[3px] border-accent/70" />
+
+            {/* receipt silhouette */}
+            <div className="flex w-32 flex-col gap-2 rounded-lg border-2 border-dashed border-line bg-bg/70 p-3 opacity-80">
+              <div className="mx-auto h-1.5 w-16 rounded bg-line" />
+              <div className="h-1 w-full rounded bg-line" />
+              <div className="h-1 w-3/4 rounded bg-line" />
+              <div className="h-1 w-full rounded bg-line" />
+              <div className="h-1 w-2/3 rounded bg-line" />
+              <div className="mx-auto mt-1 h-1.5 w-12 rounded bg-line" />
             </div>
+            <div className="text-center">
+              <div className="font-display text-lg font-bold">Fit the receipt in the frame</div>
+              <div className="mt-1 text-sm text-dim">flat on the table · good light · total in view</div>
+            </div>
+            <span className="rounded-full bg-accent px-6 py-3 font-semibold text-accent-ink transition-transform group-active:scale-95">
+              📸 Open camera
+            </span>
           </button>
         )}
 
         <button onClick={manual} className="pb-2 text-center text-sm text-dim underline decoration-dotted">
-          No photo — type the bill in instead
+          No photo — type or dictate the bill instead
         </button>
       </div>
     </div>

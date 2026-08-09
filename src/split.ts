@@ -76,6 +76,23 @@ export function applySplits(bill: Bill, overrides: Record<string, number>): Bill
   };
 }
 
+/**
+ * When people are attributed to an item on this phone (me via claims,
+ * others via name assignment), the real head-count wins over the host's
+ * pre-set ÷N — but never shrinks below it unless the guest explicitly
+ * overrides via applySplits (which is applied after this and wins).
+ */
+export function withAttribution(bill: Bill, claims: string[], assign: Record<string, string[]>): Bill {
+  const claimed = new Set(claims);
+  return {
+    ...bill,
+    items: bill.items.map((it) => {
+      const count = (assign[it.id]?.length ?? 0) + (claimed.has(it.id) ? 1 : 0);
+      return count > 0 ? { ...it, split: Math.max(it.split, count) } : it;
+    }),
+  };
+}
+
 export function myTotal(bill: Bill, claims: string[], cash: string[]): MyTotal {
   const claimed = new Set(claims);
   const cashSet = new Set(cash);

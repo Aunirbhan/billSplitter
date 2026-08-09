@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applySplits,
+  withAttribution,
   computedTotal,
   discrepancy,
   divUp,
@@ -198,6 +199,39 @@ describe("guest-local split overrides", () => {
   it("no overrides returns the same object", () => {
     const b = bill({ items: [item("a", "X", 900)] });
     expect(applySplits(b, {})).toBe(b);
+  });
+});
+
+describe("name attribution adjusts head-counts", () => {
+  const b = bill({
+    items: [item("w", "Wings", 1400, 2), item("pt", "Pad Thai", 1600)],
+    taxCents: 400,
+    people: 4,
+  });
+
+  it("attributed count matching host split changes nothing", () => {
+    const adj = withAttribution(b, ["w"], { w: ["Bob"] }); // me + Bob = 2 = host's ÷2
+    expect(adj.items[0].split).toBe(2);
+    expect(myTotal(adj, ["w"], []).itemsCents).toBe(700);
+  });
+
+  it("more eaters than the host guessed raises the divide", () => {
+    const adj = withAttribution(b, ["w"], { w: ["Bob", "Carol"] }); // 3 people now
+    expect(adj.items[0].split).toBe(3);
+    expect(myTotal(adj, ["w"], []).itemsCents).toBe(467);
+  });
+
+  it("never shrinks below the host's split, and explicit override wins last", () => {
+    const adj = withAttribution(b, [], { w: ["Bob"] }); // 1 eater, host said 2
+    expect(adj.items[0].split).toBe(2);
+    const overridden = applySplits(withAttribution(b, ["w"], { w: ["Bob", "Carol"] }), { w: 5 });
+    expect(overridden.items[0].split).toBe(5);
+    expect(myTotal(overridden, ["w"], []).itemsCents).toBe(280);
+  });
+
+  it("untouched items pass through", () => {
+    const adj = withAttribution(b, ["w"], { w: ["Bob"] });
+    expect(adj.items[1]).toEqual(b.items[1]);
   });
 });
 

@@ -69,7 +69,7 @@ export function PaySheet({
   return (
     <Sheet open={open} onClose={onClose}>
       <div className="mb-1 text-sm text-dim">You owe {host.name}</div>
-      <div className="mb-5 text-4xl font-bold tabular-nums text-mint">{formatCents(owedCents)}</div>
+      <div className="mb-5 text-4xl font-bold tabular-nums text-money">{formatCents(owedCents)}</div>
 
       {rows.length === 0 && (
         <p className="mb-4 text-dim">
