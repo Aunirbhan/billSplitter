@@ -2,7 +2,10 @@ name = "billsplitter-proxy"
 main = "worker.js"
 compatibility_date = "2026-08-01"
 
-# After `npx wrangler deploy`, run:
-#   npx wrangler secret put ANTHROPIC_API_KEY
-# The deployed URL (https://billsplitter-proxy.<your-subdomain>.workers.dev)
-# goes into the GitHub repo variable ANTHROPIC_PROXY_URL.
+# Runs on the owner's domain instead of workers.dev
+workers_dev = false
+routes = [
+  { pattern = "api.aunirbhan.com", custom_domain = true }
+]
+
+# Secret (never in this file): npx wrangler secret put ANTHROPIC_API_KEY

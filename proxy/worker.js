@@ -22,6 +22,9 @@
 
 const ALLOWED_ORIGINS = [
   "https://aunirbhan.github.io",
+  "https://aunirbhan.com",
+  "https://www.aunirbhan.com",
+  "https://billsplitter.aunirbhan.com",
   "http://localhost:5173",
   "http://localhost:4173",
 ];

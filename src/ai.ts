@@ -13,7 +13,10 @@ import { newId } from "./split";
  * 2. Direct-from-browser with a key in this device's localStorage
  *    (dev fallback / self-hosters).
  */
-const PROXY_URL: string | undefined = import.meta.env.VITE_ANTHROPIC_PROXY;
+// The public scan proxy (holds the API key server-side on Cloudflare).
+// Overridable at build time for forks/dev via VITE_ANTHROPIC_PROXY.
+const PROXY_URL: string | undefined =
+  import.meta.env.VITE_ANTHROPIC_PROXY || "https://api.aunirbhan.com";
 
 export function hasProxy(): boolean {
   return Boolean(PROXY_URL);
