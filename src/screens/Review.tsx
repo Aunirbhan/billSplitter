@@ -107,7 +107,19 @@ export function Review() {
               </div>
               <div className="mt-2 flex items-center justify-between px-1">
                 <span className="text-xs text-dim">shared by</span>
-                <Stepper value={it.split} onChange={(v) => patchItem(it.id, { split: v })} suffix="" />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => patchItem(it.id, { split: it.split === bill.people ? 1 : bill.people })}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                      it.split === bill.people && bill.people > 1
+                        ? "border-amber bg-amber/15 text-amber"
+                        : "border-line bg-card-hi text-dim"
+                    }`}
+                  >
+                    everyone
+                  </button>
+                  <Stepper value={it.split} onChange={(v) => patchItem(it.id, { split: v })} suffix="" />
+                </div>
               </div>
             </div>
           ))}

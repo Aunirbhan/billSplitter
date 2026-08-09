@@ -13,6 +13,7 @@ export function ItemCard({
   flash,
   onTap,
   onCash,
+  onSplit,
 }: {
   item: BillItem;
   claimed: boolean;
@@ -20,6 +21,8 @@ export function ItemCard({
   flash?: boolean;
   onTap: () => void;
   onCash?: () => void;
+  /** guest-local adjustment of how many people shared this item */
+  onSplit?: (n: number) => void;
 }) {
   const share = itemShare(item);
   const shared = item.split > 1;
@@ -47,8 +50,30 @@ export function ItemCard({
             )}
           </div>
           {claimed && (
-            <div className={`mt-0.5 text-sm ${cashPaid ? "text-mint" : "text-amber"}`}>
-              {cashPaid ? `paid ${formatCents(share)} cash ✓` : `your share ${formatCents(share)}`}
+            <div className={`mt-0.5 flex flex-wrap items-center gap-x-3 text-sm ${cashPaid ? "text-mint" : "text-amber"}`}>
+              <span>{cashPaid ? `paid ${formatCents(share)} cash ✓` : `your share ${formatCents(share)}`}</span>
+              {onSplit && !cashPaid && (
+                <span className="inline-flex items-center gap-1 text-dim" onClick={(e) => e.stopPropagation()}>
+                  <span>shared by</span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="grid size-6 place-items-center rounded-full border border-line bg-card-hi text-base leading-none active:text-ink"
+                    onClick={() => onSplit(item.split - 1)}
+                  >
+                    −
+                  </span>
+                  <span className="min-w-4 text-center font-semibold text-ink">{item.split}</span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="grid size-6 place-items-center rounded-full border border-line bg-card-hi text-base leading-none active:text-ink"
+                    onClick={() => onSplit(item.split + 1)}
+                  >
+                    +
+                  </span>
+                </span>
+              )}
               {onCash && !cashPaid && (
                 <span
                   role="button"

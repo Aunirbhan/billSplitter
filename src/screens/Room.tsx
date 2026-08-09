@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../store";
 import { go } from "../router";
 import { decodeBill, billId } from "../codec";
-import { evenShare, extrasCents, formatCents, myTotal } from "../split";
+import { applySplits, evenShare, extrasCents, formatCents, itemShare, myTotal } from "../split";
 import { ItemCard } from "../components/ItemCard";
 import { PaySheet } from "../components/PaySheet";
 import { ShareSheet } from "../components/ShareSheet";
@@ -20,6 +20,7 @@ export function Room({ blob, savedId }: { blob?: string; savedId?: string }) {
   const [sharing, setSharing] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [decodeFailed, setDecodeFailed] = useState(false);
+  const [justMine, setJustMine] = useState(false);
 
   // Resolve the bill: from a saved entry, or decode the link and save it.
   const resolvedId = useMemo(() => {
@@ -64,10 +65,13 @@ export function Room({ blob, savedId }: { blob?: string; savedId?: string }) {
   }
   if (!saved) return null; // decoding effect hasn't committed yet
 
-  const bill = saved.bill;
+  // Apply my local "actually N of us shared this" corrections before any math.
+  const bill = applySplits(saved.bill, saved.splits ?? {});
   const totals = myTotal(bill, saved.claims, saved.cash);
   const needsName = !saved.myName;
   const iAmHost = saved.role === "host";
+  const longList = bill.items.length > 10;
+  const visibleItems = justMine ? bill.items.filter((it) => saved.claims.includes(it.id)) : bill.items;
 
   const setName = () => {
     const n = nameInput.trim();
@@ -104,8 +108,20 @@ export function Room({ blob, savedId }: { blob?: string; savedId?: string }) {
       </div>
 
       <div className="flex-1 space-y-2 px-5 py-4 pb-40">
-        <p className="pb-1 text-sm text-dim">Tap everything {saved.myName ? `you` : "you"} had — shared plates count once each.</p>
-        {bill.items.map((it) => (
+        <div className="flex items-center justify-between pb-1">
+          <p className="text-sm text-dim">Tap everything you had — set "shared by" on split plates.</p>
+          {longList && (
+            <button
+              onClick={() => setJustMine(!justMine)}
+              className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${
+                justMine ? "border-amber bg-amber/15 text-amber" : "border-line bg-card text-dim"
+              }`}
+            >
+              {justMine ? `mine (${saved.claims.length}) ✕` : "just mine"}
+            </button>
+          )}
+        </div>
+        {visibleItems.map((it) => (
           <ItemCard
             key={it.id}
             item={it}
@@ -113,8 +129,14 @@ export function Room({ blob, savedId }: { blob?: string; savedId?: string }) {
             cashPaid={saved.cash.includes(it.id)}
             onTap={() => store.toggleClaim(saved.id, it.id)}
             onCash={() => store.toggleCash(saved.id, it.id)}
+            onSplit={(n) => store.setSplit(saved.id, it.id, n)}
           />
         ))}
+        {justMine && visibleItems.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-line py-8 text-center text-dim">
+            Nothing claimed yet — switch off "just mine" and start tapping.
+          </div>
+        )}
         <div className="pt-2 text-center text-xs text-dim/70">
           Your picks stay on your phone. When you're done, hit <b>Settle up</b> below
           {iAmHost ? " — and others do the same from your link." : ` and pay ${bill.host.name}.`}
@@ -144,7 +166,7 @@ export function Room({ blob, savedId }: { blob?: string; savedId?: string }) {
                       {it.split > 1 ? ` ÷${it.split}` : ""}
                       {cash ? " (cash)" : ""}
                     </span>
-                    <span className="tabular-nums">{formatCents(Math.ceil(it.cents / it.split))}</span>
+                    <span className="tabular-nums">{formatCents(itemShare(it))}</span>
                   </div>
                 );
               })}

@@ -47,6 +47,8 @@ export interface SavedBill {
   claims: string[];
   /** item ids I claimed but already paid in cash */
   cash: string[];
+  /** my local corrections to how many people shared an item */
+  splits?: Record<string, number>;
   myName: string;
   savedAt: number;
 }

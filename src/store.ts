@@ -17,6 +17,7 @@ interface TallyState {
   updateBill: (id: string, patch: Partial<SavedBill>) => void;
   toggleClaim: (id: string, itemId: string) => void;
   toggleCash: (id: string, itemId: string) => void;
+  setSplit: (id: string, itemId: string, split: number) => void;
   removeBill: (id: string) => void;
 }
 
@@ -80,6 +81,16 @@ export const useStore = create<TallyState>()(
           bills: {
             ...get().bills,
             [id]: { ...b, claims, cash: has ? b.cash.filter((c) => c !== itemId) : [...b.cash, itemId] },
+          },
+        });
+      },
+      setSplit: (id, itemId, split) => {
+        const b = get().bills[id];
+        if (!b) return;
+        set({
+          bills: {
+            ...get().bills,
+            [id]: { ...b, splits: { ...(b.splits ?? {}), [itemId]: Math.max(1, split) } },
           },
         });
       },

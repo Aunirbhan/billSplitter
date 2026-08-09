@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applySplits,
   computedTotal,
   discrepancy,
   divUp,
@@ -168,6 +169,35 @@ describe("property: totals always cover the bill", () => {
       expect(collected).toBeGreaterThanOrEqual(b.totalCents);
       expect(collected - b.totalCents).toBeLessThanOrEqual(bound);
     }
+  });
+});
+
+describe("guest-local split overrides", () => {
+  it("recomputes shares with my correction, without mutating the original", () => {
+    const b = bill({
+      items: [item("w", "Wings", 1400, 2), item("pt", "Pad Thai", 1600)],
+      taxCents: 400,
+      people: 4,
+      totalCents: 3400,
+    });
+    // "actually 3 of us shared the wings"
+    const mine = applySplits(b, { w: 3 });
+    expect(myTotal(mine, ["w"], []).owedCents).toBe(467 + 100); // ceil(1400/3) + 400/4
+    // original untouched
+    expect(b.items[0].split).toBe(2);
+    expect(myTotal(b, ["w"], []).owedCents).toBe(700 + 100);
+  });
+
+  it("clamps override to at least 1 and ignores unknown ids", () => {
+    const b = bill({ items: [item("a", "X", 900)], people: 1 });
+    const mine = applySplits(b, { a: 0, ghost: 5 });
+    expect(mine.items[0].split).toBe(1);
+    expect(mine.items.length).toBe(1);
+  });
+
+  it("no overrides returns the same object", () => {
+    const b = bill({ items: [item("a", "X", 900)] });
+    expect(applySplits(b, {})).toBe(b);
   });
 });
 

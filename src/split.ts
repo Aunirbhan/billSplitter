@@ -61,6 +61,21 @@ export interface MyTotal {
   owedCents: number;
 }
 
+/**
+ * Guests can locally correct how many people shared an item ("3 of us split
+ * the wings") without touching the host's link — overrides apply on their
+ * phone only, which is consistent with every total being self-computed.
+ */
+export function applySplits(bill: Bill, overrides: Record<string, number>): Bill {
+  if (!overrides || Object.keys(overrides).length === 0) return bill;
+  return {
+    ...bill,
+    items: bill.items.map((it) =>
+      overrides[it.id] ? { ...it, split: Math.max(1, overrides[it.id]) } : it,
+    ),
+  };
+}
+
 export function myTotal(bill: Bill, claims: string[], cash: string[]): MyTotal {
   const claimed = new Set(claims);
   const cashSet = new Set(cash);
