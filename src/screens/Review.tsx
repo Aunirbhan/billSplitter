@@ -9,17 +9,23 @@ import { Button, Field, Stepper, TopBar } from "../components/ui";
 import type { Bill } from "../types";
 
 function MoneyInput({ cents, onChange }: { cents: number; onChange: (c: number) => void }) {
-  const [text, setText] = useState((cents / 100).toFixed(2));
+  // Buffer only while focused, otherwise mirror the prop — so AI/voice edits
+  // that change the bill are reflected immediately in every field.
+  const [editing, setEditing] = useState<string | null>(null);
   return (
     <input
       inputMode="decimal"
-      value={text}
+      value={editing ?? (cents / 100).toFixed(2)}
+      onFocus={(e) => {
+        setEditing((cents / 100).toFixed(2));
+        e.target.select();
+      }}
       onChange={(e) => {
-        setText(e.target.value);
+        setEditing(e.target.value);
         const c = parseMoney(e.target.value);
         if (c !== null) onChange(c);
       }}
-      onBlur={() => setText((cents / 100).toFixed(2))}
+      onBlur={() => setEditing(null)}
       className="w-24 rounded-lg border border-line bg-card-hi px-2 py-1.5 text-right tabular-nums focus:border-amber focus:outline-none"
     />
   );
